@@ -1,0 +1,16 @@
+groups:
+  - name: app
+    rules:
+      - alert: RequestLiveness
+        expr: sum(rate(app_http_requests_total{path!~"/metrics|/health"}[1m]) or vector(0)) == 0
+        for: 5m
+        annotations:
+          summary: No external HTTP requests to app.
+          description: There are no HTTP requests to the app that are not to the /metrics or /health path.
+
+      - alert: RequestInternalErrors
+        expr: sum by (path) (rate(app_http_requests_total{code=~"5.."}[1m])) > 0
+        for: 2m
+        annotations:
+          summary: Internal requests errors at {{$labels.path}}.
+          description: There are HTTP 5xx requests errors. Check your logs.
